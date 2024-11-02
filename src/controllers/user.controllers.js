@@ -3,9 +3,13 @@ import { ApiError } from "../utils/ApiError.js";
 import { User } from "../models/user.models.js";
 import { cloudinaryUpload } from "../utils/cloudinary.services.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
+import generateToken from "../utils/generateToken.js";
 
 // Global vars
-
+const cookieOptions = {
+    httpOnly: true,
+    secure: true
+}
 
 // controllers
 const registerUser = asyncHandler(async (req, res) => {
@@ -62,4 +66,39 @@ const registerUser = asyncHandler(async (req, res) => {
     res.status(201).json(new ApiResponse(201, user, "User registered successfully"))
 })
 
-export { registerUser }
+const loginUser = asyncHandler(async (req, res) => {
+    const { username, email, password } = req.body;
+    
+    if (!(username || email)) {
+        throw new ApiError(400, "username or email is required")
+    }
+
+    const user = await User.findOne({
+        $or: [{ username }, { email }]
+    })
+
+    if (!user) {
+        throw new ApiError(404, "User does not exist")
+    }
+    const isPassValid = await user.isPassCorrect(password)
+    if (!isPassValid) {
+        throw new ApiError(401, "Invalid user credentials")
+    }
+    const { accessToken, refreshToken } = await generateToken(user._id)
+    
+    const loggedInUser = await User.findById(user._id).select("-password -refreshToken")
+
+    res.status(200)
+    .cookie("accessToken", accessToken, cookieOptions)
+    .cookie("refreshToken", refreshToken, cookieOptions)
+    .json(
+        new ApiResponse(200, { user: loggedInUser, accessToken, refreshToken }, "User logged in succesfully")
+    )
+
+})
+export {
+     registerUser,
+     loginUser,
+     
+
+}
