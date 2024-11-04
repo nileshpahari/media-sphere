@@ -8,22 +8,47 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET
 });
 
-const cloudinaryUpload = async (filePath) => {
+const extractPublicIdFromUrl = (url) => {
+  const parts = url.split('/');
+  const fileWithExtension = parts[parts.length - 1];
+  const publicId = fileWithExtension.split('.')[0];
+  return publicId;
+};
+
+const cloudinaryUpload = async (localFilePath) => {
   try {
-    if (!filePath) return null;
-    const response = await cloudinary.uploader.upload(filePath, {
+    if (!localFilePath) return null;
+    const response = await cloudinary.uploader.upload(localFilePath, {
       resource_type: "auto",
     })
     console.log("File uploaded successfully ", response.url);
+    fs.unlink(localFilePath, (err) => {
+      if (err) throw err;
+    })
+    console.log(`deleted ${localFilePath}`)
     return response;
   } catch (error) {
     console.log(error)
-    fs.unlink(filePath, (err) => {
-      if (err) throw error
+    fs.unlink(localFilePath, (err) => {
+      if (err) throw err;
     })
-    console.log(`deleted ${filePath}`)
+    console.log(`deleted ${localFilePath}`)
     return null;
   }
 
 }
-export { cloudinaryUpload }
+
+const cloudinaryDelete = async (remoteFilePath) => {
+  try {
+    if (!remoteFilePath) return null;
+    const publicId = extractPublicIdFromUrl(remoteFilePath)
+    const response = await cloudinary.uploader.destroy(publicId)
+    console.log(response)
+  } catch (error) {
+    console.log(error)
+    return null
+  }
+}
+
+
+export { cloudinaryUpload, cloudinaryDelete }
