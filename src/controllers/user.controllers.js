@@ -97,6 +97,21 @@ const loginUser = asyncHandler(async (req, res) => {
 
 })
 
+const logoutUser = asyncHandler(async (req, res) => {
+    const user = await User.findByIdAndUpdate(req.user._id,
+        {
+            $unset: {
+                refreshToken: 1 // this removes the field from document
+            }
+        }, { new: true }
+    ).select("-password")
+
+    res.status(200)
+        .clearCookie("accessToken", cookieOptions)
+        .clearCookie("refreshToken", cookieOptions)
+        .json(new ApiResponse(200, {}, "User logged out successfully"))
+})
+
 const updateUserPassword = asyncHandler(async (req, res) => {
 
     const { oldPassword, newPassword } = req.body;
@@ -187,6 +202,7 @@ const updateUserCoverImage = asyncHandler(async (req, res) => {
 export {
     registerUser,
     loginUser,
+    logoutUser,
     updateUserPassword,
     updateUserDetails,
     updateUserAvatar,
