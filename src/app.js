@@ -35,7 +35,5 @@ app.use("/api/playlist", playlistRouter)
 app.use("/api/dashboard", dashboardRouter)
 
 
-// route declaration
-app.use("/api/v1/users", router);
 
 export default app
