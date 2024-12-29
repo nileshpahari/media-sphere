@@ -309,6 +309,15 @@ const watchHistory = asyncHandler(async (req, res) => {
 
 })
 
+const deleteUser = asyncHandler(async (req, res) => {
+    const user = await User.findById(req.user?._id)
+    if (!user) {
+        throw new ApiError(404, "User not found")
+    }
+    await User.findByIdAndDelete(req.user?._id)
+    res.status(200).json(new ApiResponse(200, {},  "User deleted successfully"))
+})
+
 export {
     registerUser,
     loginUser,
@@ -320,4 +329,5 @@ export {
     currentUser,
     channelProfile,
     watchHistory,
+    deleteUser
 }
