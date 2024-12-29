@@ -9,6 +9,8 @@ const getAllVideos = asyncHandler(async (req, res) => {
     const { page = 1, limit = 10, query, sortBy, sortType, userId } = req.query
     //TODO: get all videos based on query, sort, pagination
 })
+
+
 const publishVideo = asyncHandler(async (req, res) => {
     const { title, description, isPublished } = req.body
     const thumbnailLocalPath = req.files?.thumbnail[0]?.path
@@ -26,7 +28,7 @@ const publishVideo = asyncHandler(async (req, res) => {
         throw new ApiError(500, "Something went wrong while uploading the video file")
     }
 
-    
+
     const video = await Video.create({
         title,
         description,
@@ -35,7 +37,7 @@ const publishVideo = asyncHandler(async (req, res) => {
         videoFile: videoFile?.url,
         owner: req.user._id,
         views: 0,
-        duration: 0, 
+        duration: 0,
     })
     return res.status(201).json(new ApiResponse(201, video, "Video created successfully"))
 })
@@ -109,10 +111,20 @@ const deleteVideo = asyncHandler(async (req, res) => {
 })
 const togglePublishStatus = asyncHandler(async (req, res) => {
     const { videoId } = req.params
+    const video = await Video.findById(videoId)
+    if (!video) {
+        throw new ApiError(404, "Video not found")
+    }
+    if (req.user._id.toString() !== video.owner.toString()) {
+        throw new ApiError(401, "You are not authorized to toggle publish status of this video")
+    }
+    video.isPublished = !video.isPublished
+    await video.save()
+    return res.status(200).json(new ApiResponse(200, video, "Publish status updated successfully"))
 })
 export {
     getAllVideos,
-    publishAVideo,
+    publishVideo,
     getVideoById,
     updateVideo,
     deleteVideo,
