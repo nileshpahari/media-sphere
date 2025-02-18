@@ -4,7 +4,7 @@ import {
     deleteCommunityPost,
     getUserCommunityPosts,
     updateCommunityPost,
-} from "../controllers/CommunityPost.controller.js"
+} from "../controllers/communityPost.controller.js"
 import {verifyJWT} from "../middlewares/auth.middleware.js"
 
 const router = Router();
